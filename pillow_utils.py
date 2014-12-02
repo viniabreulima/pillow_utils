@@ -95,6 +95,8 @@ class PillowUtils(object):
         if url.startswith('./'):
             url = url[2:]
         dst_path = os.path.join(root_dir, url)
+        if os.path.isfile(dst_path):
+            return url
         PillowUtils.resize_and_crop(src_img=str(src_file.file),
                                     dst_path=dst_path,
                                     size=size)
