@@ -8,8 +8,8 @@ import os
 from PIL import Image
 
 class PillowUtils(object):
-    @staticmethod
-    def resize_and_crop(src_img, dst_path=None, size=(100,100), crop_type='middle', save_params=[]):
+    @classmethod
+    def resize_and_crop(cls, src_img, dst_path=None, size=(100,100), crop_type='middle', save_params=[]):
         """
         Resize and crop an image to fit the specified size.
 
@@ -81,9 +81,10 @@ class PillowUtils(object):
         return img
 
 
-    def django_auto_resize_crop_rename(src_file, dst_prefix=None, size=(100,100),
-                                       crop_type='middle', save_params=[],
-                                       root_dir=''):
+    @classmethod
+    def django_auto_resize_crop_rename(cls, src_file, dst_prefix=None,
+                                       size=(100,100), crop_type='middle',
+                                       save_params=[], root_dir=''):
         '''
         '''
 
@@ -97,9 +98,11 @@ class PillowUtils(object):
         dst_path = os.path.join(root_dir, url)
         if os.path.isfile(dst_path):
             return url
-        PillowUtils.resize_and_crop(src_img=str(src_file.file),
-                                    dst_path=dst_path,
-                                    size=size)
+        try:
+            cls.resize_and_crop(src_img=str(src_file.file), dst_path=dst_path,
+                                size=size)
+        except Exception as e:
+            url = None
         return url
         
         
