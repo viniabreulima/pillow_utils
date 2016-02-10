@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pillow-utils',
-    version='0.0.01',
+    version='0.0.2',
     description='Pillow snippets',
     author=['Vinicius Lima'],
     author_email='eu@viniciuslima.com',
