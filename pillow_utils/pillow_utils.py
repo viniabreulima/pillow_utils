@@ -99,8 +99,18 @@ class PillowUtils(object):
         img_ratio = img.size[0] / float(img.size[1])
         ratio = size[0] / float(size[1])
 
-        color = ImageColor.getrgb(fill_color)
-        bg = Image.new(img.mode, size, color)
+        img_mode = img.mode
+        if fill_color.startswith('#'):
+            color = fill_color[1:]
+            color = tuple([int(color[i:i+2], 16) for i in range(0, len(color), 2)])
+            if len(color) == 4:
+                if color[3] == 255:
+                    color = tuple(color[0:2])
+                else:
+                    img_mode = 'RGBA'
+        else:
+            color = ImageColor.getcolor(fill_color)
+        bg = Image.new(img_mode, size, color)
 
         paste_bg = True
         if ratio < img_ratio:
@@ -123,7 +133,13 @@ class PillowUtils(object):
                 pos = (int((size[0] - img.size[0]) / 2), int((size[1] - img.size[1]) / 2))
             elif fit_type == 'bottom':
                 pos = (size[0] - img.size[0], size[1] - img.size[1])
-            bg.paste(img, pos)
+
+            mask = img
+            if not 'A' in img.getbands():
+                mask = None
+                if img.mode in ('1', 'L', 'P'):
+                    img = img.convert('RGB')
+            bg.paste(img, pos, mask=mask)
             img = bg
 
         cls.save_img(dst_path, img, save_params)
@@ -153,13 +169,10 @@ class PillowUtils(object):
 
     @classmethod
     def django_prepare(cls, src_file, dst_prefix, size, root_dir):
-        img_name = src_file.name
-        if img_name.startswith('./'):
-            img_name = img_name[2:]
-        dst_path = '{}@' + 'x'.join((str(x) for x in size)) + '.{}'
-        url = os.path.join(dst_prefix, dst_path.format(*img_name.rsplit('.', 1)))
-        if url.startswith('./'):
-            url = url[2:]
+        img_name = os.path.basename(src_file.name)
+
+        dst_path = '{}@' + 'x'.join((str(x) for x in size)) + '{}'
+        url = os.path.join(dst_prefix, dst_path.format(*os.path.splitext(img_name)))
         dst_path = os.path.join(root_dir, url)
         ret = os.path.isfile(dst_path)
         return ret, url, dst_path
@@ -172,7 +185,7 @@ class PillowUtils(object):
         '''
         '''
 
-        exists, url, dns_path = cls.django_prepare(src_file, dst_prefix, size, root_dir)
+        exists, url, dst_path = cls.django_prepare(src_file, dst_prefix, size, root_dir)
         if exists:
             return url
         try:
@@ -198,7 +211,6 @@ class PillowUtils(object):
             cls.resize_and_fit(src_img=str(src_file.file), dst_path=dst_path,
                                fit_type=fit_type, size=size, fill_color=fill_color)
         except Exception as e:
-            print(e)
             url = None
         return url
 
@@ -231,6 +243,5 @@ if __name__ == '__main__':
         if args.fit_type:
             params['fit_type'] = args.fit_type
         proc = p.resize_and_fit
-
 
     proc(**params)
