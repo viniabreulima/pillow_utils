@@ -8,6 +8,8 @@ import os
 from PIL import Image, ImageColor
 
 class PillowUtils(object):
+    class Error(Exception): pass
+
     @classmethod
     def resize_and_crop(cls, src_img, dst_path=None, size=(100,100), crop_type='middle', save_params=[]):
         """
@@ -181,7 +183,7 @@ class PillowUtils(object):
     @classmethod
     def django_auto_resize_crop_rename(cls, src_file, dst_prefix=None,
                                        size=(100,100), crop_type='middle',
-                                       save_params=[], root_dir=''):
+                                       save_params=[], root_dir='', silent=False):
         '''
         '''
 
@@ -192,6 +194,8 @@ class PillowUtils(object):
             cls.resize_and_crop(src_img=str(src_file.file), dst_path=dst_path,
                                 crop_type=crop_type, size=size)
         except Exception as e:
+            if not silent:
+                raise cls.Error(e)
             url = None
         return url
 
@@ -200,7 +204,7 @@ class PillowUtils(object):
     def django_auto_resize_fit_rename(cls, src_file, dst_prefix=None,
                                       size=(100,100), fit_type='middle',
                                       save_params=[], root_dir='',
-                                      fill_color='#FFFFFF'):
+                                      fill_color='#FFFFFF', silent=False):
         '''
         '''
 
@@ -211,6 +215,8 @@ class PillowUtils(object):
             cls.resize_and_fit(src_img=str(src_file.file), dst_path=dst_path,
                                fit_type=fit_type, size=size, fill_color=fill_color)
         except Exception as e:
+            if not silent:
+                raise cls.Error(e)
             url = None
         return url
 
